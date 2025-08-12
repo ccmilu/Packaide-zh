@@ -168,7 +168,7 @@ std::optional<std::vector<std::vector<packaide::Placement>>> pack_polygons_order
           for (const auto& point: candidate_points) {
             Transformation translate(CGAL::TRANSLATION, Vector_2(point.x(), point.y()));
             auto test_position = transform_polygon_with_holes(translate, rotated_polygon);
-            double test_eval = sheet_heuristics[sheet_id].eval_new_part(test_position) + 0.01 * (to_double(point.x()) + to_double(point.y()));
+            double test_eval = sheet_heuristics[sheet_id].eval_new_part(test_position) + 0.01 * to_double(point.x());
             if(test_eval < eval_value) {
               best_transform = packaide::Transform(point, i * 360/rotations);
               best_point = point;
