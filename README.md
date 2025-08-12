@@ -3,6 +3,7 @@
 [![Build status](https://github.com/DanielLiamAnderson/Packaide/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/DanielLiamAnderson/Packaide/actions) [![License: GPL3](https://img.shields.io/badge/License-GPL-blue.svg)](https://opensource.org/licenses/GPL-3.0)
 
 一个用于快速且鲁棒的 2D SVG 形状套料（nesting）的库。注意，v2分支才是最新的，其他的都过时了。
+ps：bias-left分支的排序偏向是左边，v2默认的是左上角。看需求选择。
 
 ### 致谢（Acknowledgements）
 
