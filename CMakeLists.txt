@@ -8,7 +8,7 @@
 #   - Python 3.6+
 # -------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(Packaide VERSION 2.0
              DESCRIPTION "Fast and robust 2D nesting"
              LANGUAGES CXX)

@@ -1,5 +1,0 @@
-<?xml version="1.0" ?>
-<svg viewBox="0 0 2440 800" width="2440" height="800">
-	<path d="M 0,0 L 240,0 L 240,180 L 0,180 Z" color="black" fill="black" stroke="none" transform="translate(6.250,258.750) rotate(270.000,-6.250,-6.250)"/>
-	<path d="M 12,0 L 228,0 A 12,12 0 0,1 240,12 L 240,148 A 12,12 0 0,1 228,160 L 12,160 A 12,12 0 0,1 0,148 L 0,12 A 12,12 0 0,1 12,0 Z" color="black" fill="black" stroke="none" transform="translate(181.333,241.333) rotate(270.000,11.167,-6.250)"/>
-</svg>

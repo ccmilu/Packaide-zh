@@ -37,11 +37,16 @@ def build_shapes_svg() -> str:
         '          d="M 0,0 L 400,0 L 400,400 L 0,400 Z\n'
         '             M 100,100 L 300,100 L 300,300 L 100,300 Z" />\n'
         '    <rect id="挡板-矩形" class="零件C 矩形" width="500" height="300" />\n'
+        '    <rect id="挡板1-矩形" class="零件C 矩形" width="500" height="300" />\n'
         '    <ellipse id="侧盖-椭圆" class="零件D 椭圆" rx="150" ry="100" />\n'
         '  </g>\n'
         '  <g id="中文测试组" class="组-乙">\n'
         '    <rect id="小块-1" class="小块 类别X" width="120" height="80" />\n'
         '    <rect id="小块-2" class="小块 类别Y" width="100" height="60" />\n'
+        '    <rect id="小块-3" class="小块 类别Y" width="100" height="60" />\n'
+        '    <rect id="小块-4" class="小块 类别Y" width="100" height="60" />\n'
+        '    <rect id="小块-5" class="小块 类别Y" width="100" height="60" />\n'
+        '    <rect id="小块-6" class="小块 类别Y" width="100" height="60" />\n'
         '  </g>\n'
         '</svg>'
     )
@@ -78,7 +83,7 @@ def main():
         tolerance=1.5,
         offset=5,
         partial_solution=True,
-        rotations=12,
+        rotations=8,
         persist=False
     )
 
@@ -100,3 +105,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

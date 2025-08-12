@@ -169,9 +169,12 @@ std::optional<std::vector<std::vector<packaide::Placement>>> pack_polygons_order
             Transformation translate(CGAL::TRANSLATION, Vector_2(point.x(), point.y()));
             auto test_position = transform_polygon_with_holes(translate, rotated_polygon);
             double test_eval = sheet_heuristics[sheet_id].eval_new_part(test_position);
-            // 连续偏好：更靠左、且更接近垂直中线
+            // 增强版连续偏好：更靠左（权重大），且更接近垂直中线（权重小）
             double midY = current_sheet->height / 2.0;
-            test_eval += 0.01 * to_double(point.x()) + 0.001 * std::abs(to_double(point.y()) - midY);
+            double L = 0.2;   // 左侧重力系数（越大越偏左）
+            double C = 0.02;  // 垂直居中系数（适度）
+            test_eval += L * to_double(point.x()) * current_sheet->height
+                       +  C * std::abs(to_double(point.y()) - midY) * current_sheet->width;
             if(test_eval < eval_value) {
               best_transform = packaide::Transform(point, i * 360/rotations);
               best_point = point;

@@ -142,7 +142,7 @@ def build_shapes_svg(sheet_w: int, sheet_h: int, seed: int = 7) -> str:
 
 
 def main():
-    sheet_w, sheet_h = 2440, 800
+    sheet_w, sheet_h = 4000, 2440
     sheets = [packaide.blank_sheet(sheet_w, sheet_h), packaide.blank_sheet(sheet_w, sheet_h),packaide.blank_sheet(sheet_w, sheet_h),packaide.blank_sheet(sheet_w, sheet_h),packaide.blank_sheet(sheet_w, sheet_h)]
 
     shapes_svg = build_shapes_svg(sheet_w, sheet_h, seed=11)
