@@ -1,103 +1,101 @@
-# Packaide
+# Packaide（中文文档）
 
 [![Build status](https://github.com/DanielLiamAnderson/Packaide/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/DanielLiamAnderson/Packaide/actions) [![License: GPL3](https://img.shields.io/badge/License-GPL-blue.svg)](https://opensource.org/licenses/GPL-3.0)
 
-一个用于快速且稳健的 2D SVG 形状排样（nesting）的库。
+一个用于快速且鲁棒的 2D SVG 形状套料（nesting）的库。注意，v2分支才是最新的，其他的都过时了。
 
-<img align="right" style="height: 120px; width: 120px; margin: 5px;" src="https://danielanderson.net/images/packing-animation.gif" alt="Fast packing animation" />
+### 致谢（Acknowledgements）
 
-Packaide 由 C++ 实现的核心排样引擎与 Python 封装组成。底层使用 [CGAL](https://www.cgal.org/) 提供高效且鲁棒的计算几何能力。对于需要交互式前端工具的用户，可参考配套的前端项目 Fabricaide（见 [Fabricaide 仓库](https://github.com/tichaesque/Fabricaide)）。
-
-## 目录
-
-- [Packaide](#packaide)
-  - [目录](#目录)
-  - [简介](#简介)
-  - [鸣谢](#鸣谢)
-  - [环境与依赖](#环境与依赖)
-    - [在 Ubuntu 安装 CGAL](#在-ubuntu-安装-cgal)
-    - [在 macOS 安装 CGAL](#在-macos-安装-cgal)
-    - [在 Windows 安装 CGAL](#在-windows-安装-cgal)
-  - [只安装并使用（推荐）](#只安装并使用推荐)
-  - [使用示例](#使用示例)
-    - [输入/输出格式](#输入输出格式)
-    - [参数说明](#参数说明)
-  - [面向开发者的构建](#面向开发者的构建)
-    - [测试](#测试)
-    - [基准测试](#基准测试)
-    - [安装（本地构建产物）](#安装本地构建产物)
-  - [常见问题 FAQ](#常见问题-faq)
-
-## 简介
-
-给定一组形状（SVG）和若干张承载它们的板材（也是 SVG），Packaide 以启发式算法在保证不重叠的前提下快速求解可行的排样方案。Packaide 更注重速度而非全局最优，但在绝大多数实际场景下可以在极短时间内得到高质量方案。
-
-## 鸣谢
-
-Packaide 源自研究项目 Fabricaide，该系统帮助激光切割设计者进行材料意识设计决策并更好地利用边角料。如果你在研究中使用 Packaide，请引用：
+Packaide 来自研究项目 Fabricaide（帮助激光切割对象的设计者进行材料意识设计并充分利用边角料）。如果你在研究中使用了 Packaide，请引用：
 
 > **Fabricaide: Fabrication-Aware Design for 2D Cutting Machines**  
 > Ticha Sethapakdi, Daniel Anderson, Adrian Reginald Chua Sy, Stefanie Mueller  
 > Proceedings of the 2021 ACM CHI Conference on Human Factors in Computing Systems, 2021
 
-## 环境与依赖
+## 目录
+- **它是什么**
+- **系统要求**
+  - Ubuntu 安装 CGAL
+  - macOS 安装 CGAL
+  - Windows 安装 CGAL
+- **安装 Packaide（推荐方式，基于 conda，隔离环境）**
+- **使用 Packaide**
+  - 输入 / 输出格式
+  - 参数说明
+- **常见问题与解决方案**
+- **用于开发的本地构建**
+  - 测试
+  - 基准测试（Benchmark）
+  - 安装
 
-- 现代 C++(17) 编译器（GCC 7+、Clang 5+、MSVC 2019+ 及以上版本均可）
-- Python 3.6+（推荐 3.9/3.10）
-- [CGAL](https://www.cgal.org/)
-- CMake 与构建工具（Make 或 Ninja）
+## 它是什么？
 
-Packaide 在 Ubuntu 上开发与测试充分，同时也支持 macOS 与 Windows。
+<img align="right" style="height: 120px; width: 120px; margin: 5px;" src="https://danielanderson.net/images/packing-animation.gif" alt="Fast packing animation" />
 
-### 在 Ubuntu 安装 CGAL
+Packaide 是一个 2D 套料库。给定一组形状，以及一组用于放置它们的板材（sheets），套料问题即找到一个不重叠的摆放方案。该问题在制造场景中非常常见。Packaide 优先考虑速度胜过最优性，通过快速启发式与工程实现，在保证质量的前提下实现远快于类似库的速度。
 
+实现方面：Python 库 + C++ 后端（使用 [CGAL](https://www.cgal.org/) 进行鲁棒高效的计算几何）。与之配套的前端工具 Fabricaide 在这里：[Fabricaide](https://github.com/tichaesque/Fabricaide)。
+
+## 系统要求
+- 现代 C++(17) 编译器（GCC 7+、Clang 5+、MSVC 2019+）。
+- Python 3.6+（推荐 3.9/3.10），已安装 Pip。
+- [CGAL](https://www.cgal.org/)。
+
+Packaide 在 Ubuntu 上开发并充分测试，也可在 macOS 与 Windows 上使用。
+
+### Ubuntu 获取 CGAL
 ```bash
 sudo apt install libcgal-dev
 ```
 
-### 在 macOS 安装 CGAL
-
+### macOS 获取 CGAL
+使用 Homebrew：
 ```bash
 brew install cgal
 ```
-
-或者使用 conda（推荐与 Python 环境隔离）
-
+或使用 conda（推荐与本项目的 Python 依赖一起管理）：
 ```bash
-conda install -c conda-forge cgal-cpp
+conda install -c conda-forge cgal-cpp -y
 ```
 
-### 在 Windows 安装 CGAL
-
-- 推荐 [WSL](https://docs.microsoft.com/en-us/windows/wsl/) 后按 Ubuntu 方式安装；
-- 或使用 [Conda](https://docs.conda.io/en/latest/) 安装 `cgal-cpp`；
-- 若必须原生 Windows，可参考 CGAL 官方文档（可能需要额外配置）。
-
-## 只安装并使用（推荐）
-
-以下步骤适用于“只想安装库并在 Python 中使用，不想改源码”的用户。建议使用 conda 独立环境，避免污染其他环境。
-
-以创建 Python 3.9/3.10 环境为例（任选其一，我用的是3.9，太新了可能有问题）：
-
+### Windows 获取 CGAL
+推荐使用 WSL，直接按 Ubuntu 步骤安装。若需原生 Windows：建议用 Conda：
 ```bash
-# 创建并激活环境（包含 CGAL 与构建工具）
-conda create -n packaide-env -c conda-forge python=3.10 cgal-cpp cmake ninja -y
+conda.bat install -c conda-forge cgal-cpp
+```
+在已激活的 Conda 环境内执行，环境变量会自动配置得更好。
+
+## 安装 Packaide（推荐：conda 隔离环境）
+如果你只想安装与使用该库（而不是修改源代码），建议使用 conda 创建独立环境，不影响其他环境。
+
+### 方式一：新建独立环境（推荐）
+```bash
+# 创建并激活环境（以 Python 3.9 为例，这里我用的是3.9，版本太新了可能会有问题，尤其是大于3.10的）
+conda create -n packaide-env -c conda-forge python=3.9 cgal-cpp cmake ninja -y
 conda activate packaide-env
 
-# 让 CMake 在当前 conda 环境内优先找到 CGAL
+# 让 CMake 在此环境优先找到 CGAL（很重要）
 export CMAKE_PREFIX_PATH="$CONDA_PREFIX"
 
 # 升级 pip 并安装 Python 依赖
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 
-# 构建并安装本库（若遇到 CMake 策略报错，见 FAQ）
-CMAKE_ARGS="-DCMAKE_POLICY_VERSION_MINIMUM=3.5" \
+# 安装本库（源代码根目录执行）
 python -m pip install -v .
 ```
 
-快速验证：
+### 方式二：使用你已有的 conda Python 3.9 环境
+```bash
+conda activate <你的_py39_conda环境名>
+conda install -c conda-forge cgal-cpp cmake ninja -y
+export CMAKE_PREFIX_PATH="$CONDA_PREFIX"
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python -m pip install -v .
+```
 
+安装完成后快速验证：
 ```bash
 python - <<'PY'
 import packaide
@@ -106,26 +104,14 @@ print("Blank sheet:", packaide.blank_sheet(10,10))
 PY
 ```
 
-如果更倾向于 Homebrew 安装 CGAL（macOS），也可：
-
-```bash
-# 使用 brew 安装 CGAL
-brew install cgal
-
-# 然后只需：
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-CMAKE_ARGS="-DCMAKE_POLICY_VERSION_MINIMUM=3.5" \
-python -m pip install -v .
-```
-
-## 使用示例
+## 使用 Packaide
+安装完成后即可在 Python 中使用：
 
 ```python
-# 示例：最小化调用
+# 示例：最小使用
 import packaide
 
-# 输入：形状（作为一个 SVG 文档字符串）
+# 形状以 SVG 文本提供
 shapes = """
 <svg viewBox="0 0 432.13 593.04">
   <rect width="100" height="50" />
@@ -134,120 +120,103 @@ shapes = """
 </svg>
 """
 
-# 输入：板材（同样是 SVG 文档字符串）。
-# 板材中的形状视为“孔洞”，新放置的零件需避开这些区域。
+# 板材（sheet）也以 SVG 文本表示；其上的形状按“孔洞”处理
 sheet = """
 <svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
   <rect x="0" y="0" width="100" height="100" />
 </svg>
 """
 
-# 进行排样（尽可能多地放置零件）
 result, placed, fails = packaide.pack(
-  [sheet],                  # 板材列表（每个是一个 SVG 文档）
-  shapes,                   # 待放置的形状（一个 SVG 文档）
-  tolerance = 2.5,          # 离散化与近似的容差
-  offset = 5,               # 形状之间的额外安全间距（膨胀量）
-  partial_solution = True,  # 允许返回部分可行解
-  rotations = 1,            # 尝试的旋转数量（1 表示仅保持原朝向）
-  persist = True            # 启用缓存以加速相似任务的后续运行
+  [sheet],
+  shapes,
+  tolerance=2.5,
+  offset=5,
+  partial_solution=True,
+  rotations=1,
+  persist=True
 )
 
-print(f"已放置 {placed} 个，未放置 {fails} 个")
-
-# 输出结果为若干 (i, out) 对，i 是板材索引，out 是该板材上的 SVG 结果
+print(f"placed={placed}, fails={fails}")
 for i, out in result:
-  with open(f'result_sheet_{i}.svg', 'w') as f_out:
-    f_out.write(out)
+    with open(f'result_sheet_{i}.svg', 'w') as f_out:
+        f_out.write(out)
 ```
 
-### 输入/输出格式
-
-- 输入的板材与形状都以 SVG 文档表示；
-- 使用 [SVGElements](https://pypi.org/project/svgelements/) 解析；
-- 输出中所有形状都会标准化为 SVG Path；
-- 为方便识别，输入元素的 `class`、`id`、`name` 属性将尽可能在输出中保留。
+### 输入 / 输出格式
+- 输入的形状与板材均为 SVG 文本。解析使用 [SVGElements](https://pypi.org/project/svgelements/)。
+- 输出的形状统一转换为 SVG Path 元素。
+- 若需要在输出中识别输入的对应关系，输入形状上的 `class`、`id`、`name` 等属性会被保留。
 
 ### 参数说明
+- **tolerance**：离散化近似误差。库总是以“外扩”方式处理离散多边形，保证不会出现欠近似导致相交。
+- **offset**：每个离散多边形在套料前再额外膨胀的量（即最小间距）。
+- **partial_solution**：True 时，如果无法全部放下，会返回部分可行解；False 时，要么全部放下，要么不返回解。
+- **rotations**：尝试的旋转数量。1 表示仅用原始方向；大于 1 时，从 0 到 360 度均匀采样。
+- **persist**：缓存部分计算结果以加速后续含重复形状的运行；会增加内存占用。也可通过 `custom_state` 传入自定义的 `State` 实例以控制复用范围。
 
-- **tolerance**：形状离散化为折线时允许的近似误差。Packaide 会对多边形进行膨胀，确保不会低估原形状，避免误判“无重叠”。
-- **offset**：在离散化后对多边形额外膨胀的量，用于保证零件之间的最小安全间距。
-- **partial_solution**：若为 True，当所有零件无法全部放置时，将返回尽可能多的部分解；若为 False，则要么全部放置成功，要么全部失败。
-- **rotations**：每个零件尝试的旋转姿态数量。值为 1 表示仅使用原始姿态；>1 时从 0~360 度均匀取样。
-- **persist**：是否启用持久化缓存（会占用更多内存）。若需要跨多次任务复用缓存，可传入自定义 `State` 到 `custom_state`。
-
-## 面向开发者的构建
-
-如果你希望修改源码并从本地构建开始，请先安装构建依赖：
-
-- CMake 与构建工具（如 Ninja 或 Make）
-- Python 依赖（位于 `requirements.txt`）
-
-```bash
-python -m pip install -r requirements.txt
-```
-
-初始化 CMake 构建（推荐分别配置 Debug 和 Release）
-
-### 测试
-
-```bash
-mkdir -p build/Debug && cd build/Debug
-cmake -DCMAKE_BUILD_TYPE="Debug" ../..
-cmake --build . --config Debug
-cmake --build . --target check --config Debug
-```
-
-上述 `check` 目标会运行示例输入以验证排样结果的有效性。
-
-### 基准测试
-
-```bash
-mkdir -p build/Release && cd build/Release
-cmake -DCMAKE_BUILD_TYPE="Release" ../..
-cmake --build . --config Release
-
-# 生成基准与绘图（需要 matplotlib）
-python -m pip install matplotlib
-cmake --build . --target benchmarks --config Release
-cmake --build . --target plots --config Release
-```
-
-基准图与原始数据可在已配置的 CMake 构建目录下的 `benchmark/output` 中找到。
-
-### 安装（本地构建产物）
-
-```bash
-cmake --build . --target install --config Release
-```
-
-注意：若你既从源码安装，又用 `pip install` 安装，可能在不同路径存在两份安装；请确保 `PATH`/`PYTHONPATH` 指向你期望的版本，避免冲突。
-
-## 常见问题 FAQ
-
-- **CMake 报错：Compatibility with CMake < 3.5 has been removed**  
-  原因是当前使用的 CMake 版本较新，而项目的 `cmake_minimum_required` 太低。推荐做法：在安装命令前设置
-  
+## 常见问题与解决方案（Troubleshooting）
+- **CMake 报错：Compatibility with CMake < 3.5 has been removed...**  
+  现象：构建时提示 `cmake_minimum_required(VERSION 3.0)` 过旧。  
+  解决（优先，无需改源码）：在安装命令前设置策略版本：
   ```bash
+  export CMAKE_PREFIX_PATH="$CONDA_PREFIX"
   CMAKE_ARGS="-DCMAKE_POLICY_VERSION_MINIMUM=3.5" \
   python -m pip install -v .
   ```
-  
-  或者（面向开发者）提升根目录 `CMakeLists.txt` 的 `cmake_minimum_required` 至更高版本（例如 `3.16`）。
+  备选（若仍失败）：将项目根目录 `CMakeLists.txt` 的 `cmake_minimum_required(VERSION 3.0)` 提升到更高版本（如 `3.16`），再安装。
 
-- **CMake 找不到 CGAL**  
-  请确认已安装 `cgal-cpp`（或系统已安装 CGAL），并在激活的 conda 环境中设置：
-  
+- **找不到 CGAL**  
+  确保你在激活的 conda 环境内已安装 `cgal-cpp`，并设置：
   ```bash
   export CMAKE_PREFIX_PATH="$CONDA_PREFIX"
   ```
+  之后重试 `python -m pip install -v .`。
 
-- **Shapely/GEOS 相关问题**  
-  通过 `pip install -r requirements.txt` 一般可满足；若仍有问题，可在激活环境内重新安装并用 `python -c "import shapely; print(shapely.__version__)"` 验证。
+- **编译器问题（macOS）**  
+  需要可用的 Apple Clang（通常随 Xcode 命令行工具提供）。若缺失：
+  ```bash
+  xcode-select --install
+  ```
 
-- **编译器不可用**  
-  macOS 需安装 Xcode 命令行工具：`xcode-select --install`；Linux/WSL 环境请安装常见编译工具链。
+## 用于开发的本地构建
+如果你想修改源码并本地编译测试：
+
+- 额外需要：
+  - [CMake](https://cmake.org/) 与构建工具（Make 或 Ninja）。
+  - Python 依赖：`python -m pip install -r requirements.txt`
+
+### 测试（Debug 构建）
+```bash
+mkdir -p build/Debug && cd build/Debug
+cmake -DCMAKE_BUILD_TYPE=Debug ../..
+cmake --build . --config Debug
+cmake --build . --target check --config Debug
+```
+该目标会运行一组示例并验证结果有效性。
+
+### 基准测试（Release 构建）
+```bash
+mkdir -p build/Release && cd build/Release
+cmake -DCMAKE_BUILD_TYPE=Release ../..
+cmake --build . --config Release
+
+# 额外需要 matplotlib
+python -m pip install matplotlib
+
+cmake --build . --target benchmarks --config Release
+cmake --build . --target plots --config Release
+```
+生成的图表与数据在配置的构建目录下的 `benchmark/output`。
+
+### 安装（从本地构建）
+```bash
+cmake --build . --target install --config Release
+```
+注意：如果你既通过 `pip install .` 安装过，又安装了本地构建版本，可能同时存在多个安装位置；请避免混用，或通过 `PYTHONPATH` 控制加载顺序。
 
 ---
 
-版权：GPL-3.0。更多信息见 `LICENSE`。
+- 文档更新：
+  - 修复了安装章节中的笔误（原文误写为 `python -m pip install --user . -r -requirements.txt`）。
+  - 新增了基于 conda 的隔离安装步骤与常见问题处理（包含 CMake 策略兼容报错的修复方法）。
