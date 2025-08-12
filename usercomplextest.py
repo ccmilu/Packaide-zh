@@ -62,7 +62,7 @@ def l_bracket_path(x, y, outer_w, outer_h, thickness):
     return d
 
 # 目标板（海洋板）2440x1220（单位 mm）
-sheets = [packaide.blank_sheet(2440, 2440), packaide.blank_sheet(2440, 1220)]
+sheets = [packaide.blank_sheet(2440, 1220), packaide.blank_sheet(2440, 1220)]
 
 # 生成复杂零件集合（使用同一 SVG 文档，必须提供 viewBox）
 parts = []
@@ -138,7 +138,7 @@ result, placed, fails = packaide.pack(
     offset=3,             # 零件间/边界安全距离
     partial_solution=True,# 若过多放不下，仍返回可行子集
     rotations=12,         # 多方向尝试提升紧凑度
-    persist=True
+    persist=False
 )
 
 print(f"已放置 {placed} 个零件，未放置 {fails} 个。")

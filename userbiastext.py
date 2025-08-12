@@ -1,22 +1,14 @@
-# userbiastext.py
-# 构造测试以判断排样“左上偏好”是否被替换为“靠左优先（并尽量靠近中线）”。
-# 要点：
-# - case1: 基准（空白板），通常会放在左上角（不作为通过/失败，仅输出）
-# - case2: 左侧上下各有孔洞，形成两个在 x 上同为最小的候选位置，但 y 距中线不同；
-#         旧逻辑（x+y）偏好较小 y（更靠上），新逻辑应更靠近中线。
-# - 输出结果文件时检测重复名，自动加序号避免覆盖。
-
 import os
-import re
+import math
+import random
 import time
 import packaide
 
 
-def unique_path(base_name: str) -> str:
-    """若文件已存在，则在文件名末尾加 _1, _2, ..."""
-    name, ext = os.path.splitext(base_name)
-    if not os.path.exists(base_name):
-        return base_name
+def make_unique_path(base_path: str) -> str:
+    name, ext = os.path.splitext(base_path)
+    if not os.path.exists(base_path):
+        return base_path
     i = 1
     while True:
         candidate = f"{name}_{i}{ext}"
@@ -25,98 +17,154 @@ def unique_path(base_name: str) -> str:
         i += 1
 
 
-def parse_first_translate(svg_text: str):
-    """从输出 SVG 中提取第一个形状的 translate(tx,ty)。返回 (tx, ty) 浮点数。"""
-    # 形如: transform="translate(12.345,67.890) rotate(0.000,px,py)"
-    m = re.search(r"transform=\"[^\"]*translate\(([-+]?\d*\.?\d+),([-+]?\d*\.?\d+)\)", svg_text)
-    if not m:
-        return None
-    try:
-        tx = float(m.group(1))
-        ty = float(m.group(2))
-    except Exception:
-        return None
-    return tx, ty
+def circle_path(cx: float, cy: float, r: float) -> str:
+    return f"M {cx+r},{cy} A {r},{r} 0 1 0 {cx-r},{cy} A {r},{r} 0 1 0 {cx+r},{cy} Z"
 
 
-def save_result_svgs(result, prefix: str):
-    paths = []
+def ring_path(cx: float, cy: float, r_out: float, r_in: float) -> str:
+    return circle_path(cx, cy, r_out) + " " + circle_path(cx, cy, r_in)
+
+
+def rect_path(x: float, y: float, w: float, h: float) -> str:
+    return f"M {x},{y} L {x+w},{y} L {x+w},{y+h} L {x},{y+h} Z"
+
+
+def triangle_path(x: float, y: float, w: float, h: float) -> str:
+    x0, y0 = x, y + h
+    x1, y1 = x + w, y + h
+    x2, y2 = x + w/2.0, y
+    return f"M {x0},{y0} L {x1},{y1} L {x2},{y2} Z"
+
+
+def triangle_with_circular_holes_path(x: float, y: float, w: float, h: float, holes):
+    d = triangle_path(x, y, w, h)
+    for (cx, cy, r) in holes:
+        d += " " + circle_path(cx, cy, r)
+    return d
+
+
+def l_bracket_path(x: float, y: float, outer_w: float, outer_h: float, thickness: float) -> str:
+    pts = [
+        (x, y),
+        (x + outer_w, y),
+        (x + outer_w, y + thickness),
+        (x + thickness, y + thickness),
+        (x + thickness, y + outer_h),
+        (x, y + outer_h),
+    ]
+    segs = " ".join(f"L {px},{py}" for px, py in pts[1:])
+    return f"M {pts[0][0]},{pts[0][1]} {segs} Z"
+
+
+def star_path(cx: float, cy: float, R: float, r: float, n: int, hole_radius: float = 0.0) -> str:
+    pts = []
+    for i in range(2 * n):
+        ang = math.pi * i / n
+        rad = R if i % 2 == 0 else r
+        px = cx + rad * math.cos(ang)
+        py = cy + rad * math.sin(ang)
+        pts.append((px, py))
+    segs = " ".join(f"L {x},{y}" for x, y in pts[1:])
+    d = f"M {pts[0][0]},{pts[0][1]} {segs} Z"
+    if hole_radius and hole_radius > 0:
+        d += " " + circle_path(cx, cy, hole_radius)
+    return d
+
+
+def window_panel_path(x: float, y: float, w: float, h: float, windows):
+    d = rect_path(x, y, w, h)
+    for (wx, wy, ww, wh) in windows:
+        d += " " + rect_path(x + wx, y + wy, ww, wh)
+    return d
+
+
+def build_shapes_svg(sheet_w: int, sheet_h: int, seed: int = 7) -> str:
+    random.seed(seed)
+    parts = []
+
+    # 大中小矩形
+    rect_sizes = [
+        (700, 480), (650, 420), (600, 380), (560, 360), (520, 340),
+        (480, 320), (440, 300), (400, 280), (360, 260), (320, 240),
+        (280, 200), (240, 180), (200, 150), (160, 120), (120, 80),
+        (100, 60), (80, 50), (60, 40), (50, 30), (40, 25)
+    ]
+    for w, h in rect_sizes:
+        parts.append(f'<rect width="{w}" height="{h}" />')
+
+    # 圆角矩形
+    rr_sizes = [(420, 280, 30), (360, 220, 20), (300, 180, 15), (240, 160, 12)]
+    for w, h, r in rr_sizes:
+        parts.append(f'<rect width="{w}" height="{h}" rx="{r}" ry="{r}" />')
+
+    # 圆与椭圆
+    circles = [220, 180, 150, 120, 90, 70]
+    for r in circles:
+        parts.append(f'<circle r="{r}" />')
+    ellipses = [(200, 140), (180, 120), (160, 110), (140, 90), (120, 80)]
+    for rx, ry in ellipses:
+        parts.append(f'<ellipse rx="{rx}" ry="{ry}" />')
+
+    # 环形
+    rings = [(210, 120), (180, 90), (150, 70)]
+    for ro, ri in rings:
+        parts.append(f'<path d="{ring_path(0, 0, ro, ri)}" />')
+
+    # 三角加强板（带孔）
+    tri1 = triangle_with_circular_holes_path(0, 0, 520, 430, [(200, 240, 25), (320, 240, 25), (260, 150, 25)])
+    tri2 = triangle_with_circular_holes_path(0, 0, 420, 360, [(160, 200, 20), (260, 200, 20), (210, 130, 20)])
+    parts += [f'<path d="{tri1}" />', f'<path d="{tri2}" />']
+
+    # 带窗洞面板
+    win1 = window_panel_path(0, 0, 800, 500, [(60, 60, 220, 120), (520, 60, 220, 120), (60, 320, 220, 120), (520, 320, 220, 120)])
+    win2 = window_panel_path(0, 0, 600, 360, [(40, 40, 160, 90), (400, 40, 160, 90), (40, 230, 160, 90), (400, 230, 160, 90)])
+    parts += [f'<path d="{win1}" />', f'<path d="{win2}" />']
+
+    # 星形与齿形
+    parts += [
+        f'<path d="{star_path(0, 0, 200, 90, 12, 40)}" />',
+        f'<path d="{star_path(0, 0, 160, 70, 10, 35)}" />',
+        f'<path d="{star_path(0, 0, 140, 60, 8,  30)}" />',
+        f'<path d="{star_path(0, 0, 120, 50, 7,  0)}" />'
+    ]
+
+    # L 型支架
+    parts += [
+        f'<path d="{l_bracket_path(0, 0, 320, 320, 80)}" />',
+        f'<path d="{l_bracket_path(0, 0, 260, 260, 70)}" />',
+        f'<path d="{l_bracket_path(0, 0, 220, 220, 60)}" />'
+    ]
+
+    inner = "\n  ".join(parts)
+    return f'''<svg viewBox="0 0 {sheet_w} {sheet_h}" width="{sheet_w}" height="{sheet_h}" xmlns="http://www.w3.org/2000/svg">
+  {inner}
+</svg>'''
+
+
+def main():
+    sheet_w, sheet_h = 2440, 800
+    sheets = [packaide.blank_sheet(sheet_w, sheet_h), packaide.blank_sheet(sheet_w, sheet_h),packaide.blank_sheet(sheet_w, sheet_h),packaide.blank_sheet(sheet_w, sheet_h),packaide.blank_sheet(sheet_w, sheet_h)]
+
+    shapes_svg = build_shapes_svg(sheet_w, sheet_h, seed=11)
+
+    result, placed, not_placed = packaide.pack(
+        sheet_svgs=sheets,
+        shapes=shapes_svg,
+        tolerance=1.5,
+        offset=4.0,
+        partial_solution=True,
+        rotations=12,
+        persist=True
+    )
+
+    print(f"placed={placed}, not_placed={not_placed}")
     for i, out in result:
-        path = unique_path(f"{prefix}_sheet_{i}.svg")
-        with open(path, "w") as f_out:
+        out_path = make_unique_path(f"bias_mix_sheet_{i}.svg")
+        with open(out_path, "w") as f_out:
             f_out.write(out)
-        paths.append(path)
-    return paths
-
-
-def run_case1_blank_sheet():
-    """基准：空白板 + 一个小矩形零件。通常会偏左上。"""
-    W, H = 1000, 1001  # 取奇数高，便于区分与中线的距离
-    sheet = packaide.blank_sheet(W, H)
-    shape = '<svg viewBox="0 0 5000 3000"><rect width="120" height="100" /></svg>'
-
-    result, placed, fails = packaide.pack(
-        [sheet], shape, tolerance=1.0, offset=2.0, partial_solution=True, rotations=1, persist=False
-    )
-    out_paths = save_result_svgs(result, prefix="bias_case1")
-
-    # 提取第一个 translate
-    first_svg = result[0][1] if result else ""
-    t = parse_first_translate(first_svg)
-    print("[CASE1] placed=", placed, "fails=", fails)
-    print("[CASE1] files=", out_paths)
-    if t:
-        tx, ty = t
-        print(f"[CASE1] translate=({tx:.3f},{ty:.3f}), midY={H/2:.3f}")
-    else:
-        print("[CASE1] 未解析到 translate()")
-
-
-def run_case2_left_edge_tie():
-    """左侧上下各有孔洞，形成两个同样靠左的候选窗口，y 与中线距离不同。"""
-    W, H = 2000, 1201   # 奇数高，midY 非整数
-    midY = H / 2.0
-
-    # 两个左侧孔：上孔 [0,0,300,240]，下孔 [0,H-260,300,260]
-    # 中间留出较大可用带，使得靠左的可行点接近 midY。
-    sheet = f'''
-<svg width="{W}" height="{H}" viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg">
-  <rect x="0" y="0" width="300" height="240" />
-  <rect x="0" y="{H-260}" width="300" height="260" />
-</svg>
-'''
-    # 小矩形零件
-    shape = '<svg viewBox="0 0 5000 3000"><rect width="160" height="140" /></svg>'
-
-    result, placed, fails = packaide.pack(
-        [sheet], shape, tolerance=1.0, offset=2.0, partial_solution=True, rotations=1, persist=False
-    )
-    out_paths = save_result_svgs(result, prefix="bias_case2")
-
-    # 解析 translate
-    first_svg = result[0][1] if result else ""
-    t = parse_first_translate(first_svg)
-
-    print("[CASE2] placed=", placed, "fails=", fails)
-    print("[CASE2] files=", out_paths)
-    if t:
-        tx, ty = t
-        print(f"[CASE2] translate=({tx:.3f},{ty:.3f}), midY={midY:.3f}")
-        # 判定：是否更靠近中线（而非更靠近顶部）
-        dy_mid = abs(ty - midY)
-        dy_top = abs(ty - 0.0)
-        # 仅做提示性判断，非严格断言
-        if dy_mid + 1e-6 < dy_top:
-            print("[CASE2] 判定：更靠近中线，符合“靠左且居中”的新偏好。")
-        else:
-            print("[CASE2] 判定：未明显靠近中线，可能仍有“靠上”倾向或几何平局。")
-    else:
-        print("[CASE2] 未解析到 translate()")
+        print("wrote:", out_path)
 
 
 if __name__ == "__main__":
-    print("[INFO] 开始运行偏好测试...", time.strftime("%Y-%m-%d %H:%M:%S"))
-    run_case1_blank_sheet()
-    print("-" * 60)
-    run_case2_left_edge_tie()
-    print("[INFO] 完成。")
+    print("[INFO] run at", time.strftime("%Y-%m-%d %H:%M:%S"))
+    main()
