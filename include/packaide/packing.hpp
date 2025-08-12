@@ -168,8 +168,26 @@ std::optional<std::vector<std::vector<packaide::Placement>>> pack_polygons_order
           for (const auto& point: candidate_points) {
             Transformation translate(CGAL::TRANSLATION, Vector_2(point.x(), point.y()));
             auto test_position = transform_polygon_with_holes(translate, rotated_polygon);
-            double test_eval = sheet_heuristics[sheet_id].eval_new_part(test_position) + 0.01 * to_double(point.x());
-            if(test_eval < eval_value) {
+            double test_eval = sheet_heuristics[sheet_id].eval_new_part(test_position);
+            const double eps = 1e-9;
+            bool better = false;
+            if (test_eval + eps < eval_value) {
+              better = true;
+            } else if (std::abs(test_eval - eval_value) <= eps) {
+              // Tie-break 1: prefer smaller x (更靠左)
+              if (to_double(point.x()) + eps < to_double(best_point.x())) {
+                better = true;
+              } else if (std::abs(to_double(point.x()) - to_double(best_point.x())) <= eps) {
+                // Tie-break 2: prefer y closer to sheet mid-height (避免偏上/偏下)
+                double midY = current_sheet->height / 2.0;
+                double dy_new = std::abs(to_double(point.y()) - midY);
+                double dy_old = std::abs(to_double(best_point.y()) - midY);
+                if (dy_new + eps < dy_old) {
+                  better = true;
+                }
+              }
+            }
+            if (better) {
               best_transform = packaide::Transform(point, i * 360/rotations);
               best_point = point;
               best_i = i;

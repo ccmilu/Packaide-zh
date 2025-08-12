@@ -2,8 +2,8 @@ import packaide
 
 W, H = 2440, 1220  # 板材尺寸（建议单位一致，mm）
 OFFSET = 5         # 形状之间的安全间距
-TOL = 2.0          # 离散近似容差
-ROTATIONS = 1      # 旋转尝试数量（1=不旋转；>1 时等角度取样）
+TOL = 1.5          # 离散近似容差
+ROTATIONS = 8      # 旋转尝试数量（1=不旋转；>1 时等角度取样）
 
 def make_sheet(w, h):
     # 也可用 packaide.blank_sheet(w, h)

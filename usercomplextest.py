@@ -62,7 +62,7 @@ def l_bracket_path(x, y, outer_w, outer_h, thickness):
     return d
 
 # 目标板（海洋板）2440x1220（单位 mm）
-sheets = [packaide.blank_sheet(2440, 1220), packaide.blank_sheet(2440, 1220)]
+sheets = [packaide.blank_sheet(2440, 2440), packaide.blank_sheet(2440, 1220)]
 
 # 生成复杂零件集合（使用同一 SVG 文档，必须提供 viewBox）
 parts = []
