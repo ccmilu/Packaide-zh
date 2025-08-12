@@ -143,17 +143,19 @@ std::optional<std::vector<std::vector<packaide::Placement>>> pack_polygons_order
       packaide::Transform best_transform;
       Point_2 best_point;
       int best_i;
-      double eval_value = INFINITY;
-
+      double best_x = INFINITY;
+      double best_dy = INFINITY;
+      double best_eval = INFINITY;
+      
       for (int i = 0; i < rotations; i++){
         double angle = i * 2 * pi/rotations;
-
+        
         // Compute the inner fit polygon
         Transformation rotate(CGAL::ROTATION, std::sin(angle), std::cos(angle));
         auto rotated_polygon = transform_polygon_with_holes(rotate, *current_polygon);
         auto sheet_boundary = current_sheet->get_boundary();
         auto ifp = interior_nfp(Polygon_with_holes_2(sheet_boundary), rotated_polygon).outer_boundary();
-
+        
         // Generate the candidate placement locations from the no fit polygons
         packaide::CandidatePoints candidates{};
         candidates.set_boundary(ifp);
@@ -161,31 +163,43 @@ std::optional<std::vector<std::vector<packaide::Placement>>> pack_polygons_order
           auto nfp_shape = nfp(shape.base, shape.transform, shape.rotation, current_polygon, angle, state);
           candidates.add_nfp(nfp_shape);
         }
-
+        
         // Try all candidate points and select the best one
         auto candidate_points = candidates.get_points();
         if (!candidate_points.empty()) {
           for (const auto& point: candidate_points) {
             Transformation translate(CGAL::TRANSLATION, Vector_2(point.x(), point.y()));
             auto test_position = transform_polygon_with_holes(translate, rotated_polygon);
-            double test_eval = sheet_heuristics[sheet_id].eval_new_part(test_position);
-            // 增强版连续偏好：更靠左（权重大），且更接近垂直中线（权重小）
+            const double eps = 1e-9;
             double midY = current_sheet->height / 2.0;
-            double L = 0.2;   // 左侧重力系数（越大越偏左）
-            double C = 0.02;  // 垂直居中系数（适度）
-            test_eval += L * to_double(point.x()) * current_sheet->height
-                       +  C * std::abs(to_double(point.y()) - midY) * current_sheet->width;
-            if(test_eval < eval_value) {
+            double x_val = to_double(point.x());
+            double dy_val = std::abs(to_double(point.y()) - midY);
+            double eval_val = sheet_heuristics[sheet_id].eval_new_part(test_position);
+            bool better = false;
+            if (x_val + eps < best_x) {
+              better = true;
+            } else if (std::abs(x_val - best_x) <= eps) {
+              if (dy_val + eps < best_dy) {
+                better = true;
+              } else if (std::abs(dy_val - best_dy) <= eps) {
+                if (eval_val + eps < best_eval) {
+                  better = true;
+                }
+              }
+            }
+            if (better) {
               best_transform = packaide::Transform(point, i * 360/rotations);
               best_point = point;
               best_i = i;
-              eval_value = test_eval;
+              best_x = x_val;
+              best_dy = dy_val;
+              best_eval = eval_val;
             }
           }
           polygon_placed = true;
         }
       }
-
+      
       // Add the new placement
       if (polygon_placed) {
         Transformation best_rotate(CGAL::ROTATION, std::sin(best_i * 2 * pi/rotations), std::cos(best_i * 2 * pi/rotations));

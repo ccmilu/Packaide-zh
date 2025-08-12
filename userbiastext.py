@@ -153,7 +153,7 @@ def main():
         tolerance=1.5,
         offset=4.0,
         partial_solution=True,
-        rotations=12,
+        rotations=4,
         persist=True
     )
 
