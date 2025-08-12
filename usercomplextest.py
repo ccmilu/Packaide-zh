@@ -1,5 +1,5 @@
 # usertest_model_complex.py
-# 复杂模型示例：多类曲线/孔/复杂轮廓零件在 2440x1220 板上排版
+# 复杂模型示例：测试多类曲线/孔/复杂轮廓零件在 2440x1220 板上排版
 import math
 import packaide
 
